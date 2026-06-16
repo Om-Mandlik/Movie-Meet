@@ -1,0 +1,53 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="liked-movies-container" style="max-width: 900px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+    
+    <h1 style="font-size: 2em; font-weight: 800; color: #1e293b; margin-bottom: 30px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+        <span>❤️</span> My Liked Movies
+    </h1>
+
+    <div class="liked-movies-list" style="display: flex; flex-direction: column; gap: 20px;">
+        {% for movie in movies %}
+            <div class="liked-movie-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease, box-shadow: 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.08)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.05)';">
+                
+                <div style="width: 110px; height: 160px; background-color: #e2e8f0; flex-shrink: 0; overflow: hidden;">
+                    {% if movie.poster and movie.poster != "N/A" %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.movie_title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 0.8em; font-weight: 500; text-align: center; padding: 10px;">🎬 No Poster</div>
+                    {% endif %}
+                </div>
+
+                <div style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+                    <div>
+                        <h3 style="font-size: 1.2em; font-weight: 700; color: #1e293b; margin: 0 0 6px 0; line-height: 1.4;">
+                            {{ movie.movie_title }}
+                        </h3>
+                        <span style="font-size: 0.85em; font-weight: 600; color: #64748b; background-color: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+                            Saved to Profile
+                        </span>
+                    </div>
+
+                    <div style="align-self: flex-start;">
+                        <a href="{% url 'movie_detail' movie.imdb_id %}" style="display: inline-flex; align-items: center; background-color: #f1f5f9; color: #1e293b; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.9em; font-weight: 600; border: 1px solid #cbd5e1; transition: all 0.15s ease;" onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.borderColor='#94a3b8';" onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.borderColor='#cbd5e1';">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        {% empty %}
+            <div class="empty-liked-state" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 50px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <div style="font-size: 3em; margin-bottom: 15px;">🍿</div>
+                <h3 style="color: #1e293b; font-size: 1.3em; margin-bottom: 10px; font-weight: 700;">No liked movies yet</h3>
+                <p style="color: #64748b; font-size: 0.95em; line-height: 1.5; margin: 0 0 20px 0;">Your liked list is empty. Go find movies to populate your profile and match with other users!</p>
+                <a href="{% url 'home' %}" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 10px 20px; font-weight: 600; border-radius: 8px; font-size: 0.95em; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
+                    Browse Movies
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

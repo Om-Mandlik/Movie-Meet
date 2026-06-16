@@ -1,0 +1,97 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="matches-page-wrapper" style="max-width: 650px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+    
+    <h2 style="font-size: 2em; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 30px; letter-spacing: -0.5px;">
+        ✨ Your Movie Taste Matches
+    </h2>
+    
+    {% if error %}
+        <div class="engine-alert" style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <h4 style="margin: 0 0 10px 0; font-size: 1.4em; color: #b45309;">🍿 Engine Needs More Popcorn!</h4>
+            <p style="color: #d97706; margin-bottom: 24px; font-size: 0.95em; line-height: 1.5;">{{ error }}</p>
+            <hr style="border: 0; border-top: 1px solid #fef3c7; margin-bottom: 24px;">
+            <a href="{% url 'home' %}" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
+                Go Search & Like Movies
+            </a>
+        </div>
+    {% else %}
+        
+        {% if not candidates %}
+            <div class="empty-matches-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <h3 style="color: #1e293b; font-size: 1.3em; margin-bottom: 10px;">No matches found right now!</h3>
+                <p style="color: #64748b; font-size: 0.95em; line-height: 1.5; margin: 0;">We couldn't find profiles matching your exact taste criteria. Try liking a wider variety of movie genres!</p>
+            </div>
+        {% endif %}
+
+        <div class="discovery-feed" style="display: flex; flex-direction: column; gap: 25px;">
+            {% for candidate in candidates %}
+                <div class="candidate-card" id="user-card-{{ candidate.user_id }}" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
+                        <div>
+                            <h3 style="font-size: 1.3em; font-weight: 700; color: #1e293b; margin: 0 0 8px 0;">@{{ candidate.username }}</h3>
+                            <p style="font-size: 0.95em; color: #475569; font-style: italic; line-height: 1.5; margin: 0; padding-left: 4px; border-left: 2px solid #cbd5e1;">
+                                "{{ candidate.bio|default:'No bio provided.' }}"
+                            </p>
+                        </div>
+                        
+                        <div style="flex-shrink: 0;">
+                            <span style="display: inline-block; background-color: #10b981; color: #ffffff; font-weight: 700; font-size: 0.9em; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                                🔥 {{ candidate.match_score }} Match
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="handleSwipe({{ candidate.user_id }}, 'DISLIKE')" class="swipe-btn dislike" style="flex: 1; max-width: 180px; background-color: transparent; border: 1px solid #ef4444; color: #ef4444; font-size: 0.95em; font-weight: 600; padding: 12px 0; border-radius: 30px; cursor: pointer; transition: all 0.15s ease;" onmouseover="this.style.backgroundColor='#fef2f2';" onmouseout="this.style.backgroundColor='transparent';">
+                            ❌ Pass
+                        </button>
+                        <button onclick="handleSwipe({{ candidate.user_id }}, 'LIKE')" class="swipe-btn like" style="flex: 1; max-width: 180px; background-color: #ef4444; border: none; color: #ffffff; font-size: 0.95em; font-weight: 600; padding: 12px 0; border-radius: 30px; cursor: pointer; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
+                            ❤️ Like
+                        </button>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function handleSwipe(targetUserId, actionType) {
+    const url = `/swipe/${targetUserId}/${actionType}/`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.getElementById(`user-card-${targetUserId}`);
+            card.style.transition = "all 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
+            card.style.transform = "translateX(" + (actionType === 'LIKE' ? '250px' : '-250px') + ") rotate(" + (actionType === 'LIKE' ? '10' : '-10') + "deg)";
+            card.style.opacity = "0";
+            
+            setTimeout(() => {
+                card.remove();
+                if (document.querySelectorAll('.candidate-card').length === 0) {
+                    window.location.reload();
+                }
+            }, 400);
+
+            if (data.mutual_match) {
+                alert("🎉 It's a Mutual Match! Go check your Match Chat logs!");
+            }
+        }
+    })
+    .catch(error => console.error('Error processing swipe:', error));
+}
+</script>
+{% endblock %}

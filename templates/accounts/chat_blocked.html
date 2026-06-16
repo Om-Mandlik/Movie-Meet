@@ -1,0 +1,33 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="error-page-wrapper" style="max-width: 500px; margin: 80px auto; padding: 0 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+    
+    <!-- Clean Structured Error Card Component -->
+    <div class="error-card" style="background-color: #ffffff; border: 1px solid #fee2e2; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+        
+        <!-- Animated / Graphical Warning Visual Element Indicator -->
+        <div style="width: 60px; height: 60px; background-color: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+            <span style="font-size: 1.8em; line-height: 1;">🔒</span>
+        </div>
+
+        <h2 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.5em; font-weight: 800; letter-spacing: -0.5px;">
+            Room Access Suspended
+        </h2>
+        
+        <p style="color: #64748b; font-size: 0.95em; line-height: 1.6; margin: 0 0 30px 0;">
+            {% if error %}
+                {{ error }}
+            {% else %}
+                You do not have active authorization to view or chat inside this connection room space.
+            {% endif %}
+        </p>
+        
+        <!-- Redirect Return Component Trigger -->
+        <a href="{% url 'matches_dashboard' %}" style="display: inline-block; background-color: #ef4444; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 0.95em; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
+            Back to Matches
+        </a>
+        
+    </div>
+</div>
+{% endblock %}

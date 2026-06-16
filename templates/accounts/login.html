@@ -1,0 +1,57 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="login-card-container" style="max-width: 400px; margin: 60px auto; padding: 35px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+    
+    <h2 style="margin-top: 0; margin-bottom: 8px; font-size: 1.75em; font-weight: 700; color: #1e293b; text-align: center;">Welcome Back</h2>
+    <p style="margin-top: 0; margin-bottom: 24px; font-size: 0.9em; color: #64748b; text-align: center;">Sign in to check your movie matches</p>
+
+    {% if error %}
+        <div class="alert-banner" style="background-color: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; padding: 12px 14px; border-radius: 8px; font-size: 0.9em; margin-bottom: 20px; font-weight: 500;">
+            ⚠️ {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ request.get_full_path }}" style="display: flex; flex-direction: column; gap: 18px;">
+        {% csrf_token %}
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="username" style="font-size: 0.85em; font-weight: 600; color: #475569;">Username</label>
+            <input 
+                type="text" 
+                id="username"
+                name="username" 
+                required 
+                style="padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; font-family: inherit; transition: border-color 0.15s ease;"
+                onfocus="this.style.borderColor='#007bff'; this.style.outline='none';"
+                onblur="this.style.borderColor='#cbd5e1';"
+            >
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="password" style="font-size: 0.85em; font-weight: 600; color: #475569;">Password</label>
+            <input 
+                type="password" 
+                id="password"
+                name="password" 
+                required 
+                style="padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; font-family: inherit; transition: border-color 0.15s ease;"
+                onfocus="this.style.borderColor='#007bff'; this.style.outline='none';"
+                onblur="this.style.borderColor='#cbd5e1';"
+            >
+        </div>
+
+        <button type="submit" style="background-color: #007bff; color: #ffffff; border: none; padding: 12px; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
+            Log In
+        </button>
+    </form>
+
+    <div style="margin-top: 24px; text-align: center; font-size: 0.9em; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        Don't have an account? 
+        <a href="{% url 'register' %}" style="color: #007bff; text-decoration: none; font-weight: 600; margin-left: 4px; transition: color 0.15s ease;" onmouseover="this.style.color='#0056b3';" onmouseout="this.style.color='#007bff';">
+            Create Account
+        </a>
+    </div>
+
+</div>
+{% endblock %}

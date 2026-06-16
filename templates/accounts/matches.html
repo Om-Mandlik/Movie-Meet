@@ -1,0 +1,108 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="connections-page-wrapper" style="max-width: 800px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 0 20px;">
+    
+    <!-- Header Hero Section -->
+    <header style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-size: 2.2em; font-weight: 800; color: #1e293b; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+            Your Cinema Connections
+        </h1>
+        <p style="color: #64748b; font-size: 1.05em; margin: 0; font-weight: 500;">
+            Profiles matched based on your mutual taste in film.
+        </p>
+    </header>
+    
+    {% if matches %}
+        <!-- List container for confirmed mutual match cards -->
+        <div class="matches-stack" style="display: flex; flex-direction: column; gap: 30px;">
+            {% for match in matches %}
+                <article class="match-profile-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden;">
+                    
+                    <!-- Card Top Header Row -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <h2 style="font-size: 1.4em; font-weight: 700; color: #1e293b; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
+                                @{{ match.username }}
+                                <span style="font-size: 0.65em; font-weight: 600; color: #059669; background-color: #d1fae5; padding: 3px 8px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    {{ match.status|default:"Matched" }}
+                                </span>
+                            </h2>
+                            <p style="margin: 0; font-size: 0.9em; color: #64748b; font-weight: 500;">
+                                Gender Identity: <span style="color: #475569; font-weight: 600;">{{ match.gender|title }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Pill Badge for Shared Count Counter -->
+                        <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 20px; font-size: 0.9em; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
+                            🎬 <span>{{ match.common_count }} movies in common</span>
+                        </div>
+                    </div>
+
+                    <!-- User Biography Blockquote Window -->
+                    <div style="background-color: #f8fafc; border-left: 3px solid #cbd5e1; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 25px;">
+                        <p style="margin: 0; font-size: 0.95em; color: #475569; font-style: italic; line-height: 1.5;">
+                            "{% if match.bio %}{{ match.bio }}{% else %}No bio added yet...{% endif %}"
+                        </p>
+                    </div>
+
+                    <!-- Shared Interest Area: Horizontal Scroller Grid -->
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 0 0 12px 0; font-weight: 700;">
+                            You both loved
+                        </h3>
+                        
+                        {% if match.shared_movies %}
+                            <!-- Horizontal scroll wrapper flex track container -->
+                            <div class="shared-movies-track" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin;">
+                                {% for movie in match.shared_movies %}
+                                    <div class="shared-movie-thumb" style="flex: 0 0 90px; display: flex; flex-direction: column; gap: 6px; text-align: center;">
+                                        <!-- Miniature Poster frame box ratio handler -->
+                                        <div style="width: 90px; height: 130px; background-color: #0f172a; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            {% if movie.poster and movie.poster != "N/A" %}
+                                                <img src="{{ movie.poster }}" alt="{{ movie.movie_title }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                            {% else %}
+                                                <div style="color: #64748b; font-size: 0.65em; font-weight: 600; padding: 4px;">🎬 No Poster</div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Compressed Movie title display name element strings -->
+                                        <span style="font-size: 0.75em; font-weight: 600; color: #334155; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; height: 2.4em;" title="{{ movie.movie_title }}">
+                                            {{ movie.movie_title }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="margin: 0; font-size: 0.9em; color: #94a3b8; font-style: italic;">No individual movie previews found.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Interactive Action Footer Area -->
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; display: flex; justify-content: flex-end;">
+                        <a href="/chat/{{ match.match_id }}/" style="display: inline-flex; align-items: center; justify-content: center; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 10px 20px; font-size: 0.95em; font-weight: 600; border-radius: 8px; gap: 8px; transition: background-color 0.15s ease; box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.15);" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
+                            💬 Open Chat with @{{ match.username }}
+                        </a>
+                    </div>
+
+                </article>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Styled Empty Fallback State View Block -->
+        <div class="empty-matches-view" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 60px 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            <div style="font-size: 3.5em; margin-bottom: 20px;">⚡</div>
+            <h3 style="color: #1e293b; font-size: 1.4em; margin-bottom: 12px; font-weight: 700; letter-spacing: -0.3px;">
+                No mutual matches yet
+            </h3>
+            <p style="color: #64748b; font-size: 0.98em; line-height: 1.6; max-width: 480px; margin: 0 auto 25px auto;">
+                Keep exploring and saving films you love! Once another cinephile with shared taste likes your profile back, they will appear instantly right here.
+            </p>
+            <a href="/discovery/" style="display: inline-block; background-color: #ef4444; color: #ffffff; text-decoration: none; padding: 12px 24px; font-weight: 700; border-radius: 8px; font-size: 0.95em; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15); transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
+                Discover Movie Profiles
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

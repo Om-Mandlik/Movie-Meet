@@ -1,0 +1,95 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="movie-detail-wrapper" style="max-width: 1000px; margin: 30px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; color: #64748b; text-decoration: none; font-size: 0.95em; font-weight: 600; gap: 6px; transition: color 0.15s ease;" onmouseover="this.style.color='#007bff';" onmouseout="this.style.color='#64748b';">
+            ← Back to Home
+        </a>
+    </div>
+
+    <div class="detail-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+        
+        <div class="detail-poster-aside" style="width: 350px; background-color: #0f172a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            {% if movie.Poster and movie.Poster != "N/A" %}
+                <img src="{{ movie.Poster }}" alt="{{ movie.Title }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+            {% else %}
+                <div style="color: #94a3b8; font-size: 1.1em; font-weight: 500;">🎬 No Poster Available</div>
+            {% endif %}
+        </div>
+
+        <div class="detail-meta-body" style="padding: 40px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 25px;">
+            
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 8px;">
+                    <h1 style="font-size: 2.2em; font-weight: 800; color: #1e293b; margin: 0; line-height: 1.2; letter-spacing: -0.5px;">
+                        {{ movie.Title }}
+                    </h1>
+                    <span style="display: inline-flex; align-items: center; background-color: #fef3c7; color: #92400e; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 0.95em; white-space: nowrap; border: 1px solid #fde68a;">
+                        ⭐ {{ movie.imdbRating }}
+                    </span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 0.9em; color: #64748b; font-weight: 500; margin-bottom: 20px;">
+                    <span>{{ movie.Year }}</span>
+                    <span style="color: #cbd5e1;">•</span>
+                    <span style="background-color: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{ movie.Genre }}</span>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 20px;">
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 0 0 8px 0; font-weight: 700;">Plot Summary</h3>
+                    <p style="color: #475569; font-size: 1em; line-height: 1.6; margin: 0;">{{ movie.Plot }}</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.95em;">
+                    <p style="margin: 0; color: #475569;"><strong style="color: #1e293b; font-weight: 600; width: 80px; display: inline-block;">Director:</strong> {{ movie.Director }}</p>
+                    <p style="margin: 0; color: #475569;"><strong style="color: #1e293b; font-weight: 600; width: 80px; display: inline-block;">Actors:</strong> {{ movie.Actors }}</p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; border-top: 1px solid #f1f5f9; padding-top: 25px; margin-top: auto;">
+                
+                <form method="POST" action="{% url 'add_to_watchlist' %}" style="flex: 1; margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                    <input type="hidden" name="title" value="{{ movie.Title }}">
+                    <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                    <button type="submit" class="action-btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 12px 20px; font-size: 0.95em; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;" onmouseover="this.style.backgroundColor='#f8fafc'; this.style.borderColor='#94a3b8';" onmouseout="this.style.backgroundColor='#ffffff'; this.style.borderColor='#cbd5e1';">
+                        ➕ Add to Watchlist
+                    </button>
+                </form>
+
+                <form method="POST" action="{% url 'like_movie' %}" style="flex: 1; margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="imdb_id" value="{{ movie.imdbID }}">
+                    <input type="hidden" name="title" value="{{ movie.Title }}">
+                    <input type="hidden" name="poster" value="{{ movie.Poster }}">
+                    <button type="submit" class="action-btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #ef4444; border: none; color: #ffffff; padding: 12px 20px; font-size: 0.95em; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
+                        ❤️ Like Movie
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        .detail-card {
+            flex-direction: column !important;
+        }
+        .detail-poster-aside {
+            width: 100% !important;
+            height: 380px !important;
+        }
+        .detail-meta-body {
+            padding: 25px !important;
+        }
+    }
+</style>
+{% endblock %}

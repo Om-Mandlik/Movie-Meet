@@ -1,0 +1,104 @@
+{% extends 'accounts/base_nav.html' %}
+
+{% block content %}
+<div class="home-container" style="max-width: 1200px; margin: 30px auto; padding: 0 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    
+    <div class="dashboard-header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 40px; border-radius: 16px; color: #ffffff; margin-bottom: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <h1 style="margin: 0 0 10px 0; font-size: 2.3em; font-weight: 800; letter-spacing: -0.5px;">Welcome back, @{{ request.user.username }}!</h1>
+        <p style="margin: 0 0 25px 0; color: #94a3b8; font-weight: 500;">Your lists: 🎬 <strong>{{ watchlist_count }}</strong> in Watchlist | ❤️ <strong>{{ liked_count }}</strong> Liked Movies</p>
+        
+        <form action="{% url 'home' %}" method="GET" style="display: flex; gap: 10px; max-width: 600px; margin: 0;">
+            <input type="text" name="q" value="{% if query %}{{ query }}{% endif %}" placeholder="Search for movies, actors or franchises..." style="flex: 1; padding: 14px 20px; border: none; border-radius: 8px; font-size: 1em; color: #0f172a; font-weight: 500; outline: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <button type="submit" style="background-color: #007bff; color: #ffffff; border: none; padding: 0 28px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.15s ease;">Search</button>
+        </form>
+    </div>
+
+    {% if not query %} <div class="recommendation-feed-section" style="margin-bottom: 50px;">
+            <div style="margin-bottom: 24px;">
+                <h2 style="font-size: 1.6em; font-weight: 800; color: #1e293b; margin: 0 0 4px 0;">🍿 Picks Just For You</h2>
+                <p style="color: #64748b; font-size: 0.95em; margin: 0; font-weight: 500;">Generated in real-time based on your profile match vectors and shared favorites.</p>
+            </div>
+
+            {% if cold_start %}
+                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 30px; text-align: center;">
+                    <span style="font-size: 2em; display: inline-block; margin-bottom: 8px;">🤖</span>
+                    <h4 style="margin: 0 0 6px 0; color: #334155; font-size: 1.1em; font-weight: 700;">Calibrating recommendation matrix</h4>
+                    <p style="margin: 0; color: #64748b; font-size: 0.9em; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">{{ cold_start_message }} Keep swiping and liking movies to unlock your feed dashboard.</p>
+                </div>
+            {% else %}
+                <div class="feed-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;">
+                    {% for rec in recommended_movies %}
+                        <div class="feed-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; display: flex; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); transition: all 0.2s ease;">
+                            
+                            <div style="width: 100px; flex-shrink: 0; background-color: #f1f5f9; position: relative;">
+                                {% if rec.poster and rec.poster != 'N/A' %}
+                                    <img src="{{ rec.poster }}" alt="{{ rec.title }}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                {% else %}
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; color: #94a3b8;">🎬</div>
+                                {% endif %}
+                            </div>
+
+                            <div style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <span style="color: #007bff; font-weight: 700; font-size: 0.7em; text-transform: uppercase; tracking: 0.5px; display: block; margin-bottom: 4px;">✨ {{ rec.reason }}</span>
+                                    <h4 style="margin: 0 0 10px 0; font-size: 0.95em; font-weight: 700; color: #1e293b; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ rec.title }}</h4>
+                                </div>
+
+                                <div style="display: flex; gap: 6px;">
+                                    <a href="{% url 'movie_detail' rec.imdb_id %}" style="flex: 1; text-align: center; background-color: #f1f5f9; color: #475569; text-decoration: none; font-size: 0.8em; font-weight: 700; padding: 6px 0; border-radius: 6px; transition: background 0.1s;">View</a>
+                                    <form action="{% url 'like_movie' %}" method="POST" style="flex: 1; margin: 0;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="imdb_id" value="{{ rec.imdb_id }}">
+                                        <input type="hidden" name="title" value="{{ rec.title }}">
+                                        <input type="hidden" name="poster" value="{{ rec.poster }}">
+                                        <button type="submit" style="width: 100%; background-color: #007bff; color: #ffffff; border: none; font-size: 0.8em; font-weight: 700; padding: 6px 0; border-radius: 6px; cursor: pointer; transition: background 0.1s;">❤️ Like</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 40px;">
+    {% endif %}
+
+    <div class="search-results-section">
+        <h2 style="font-size: 1.6em; font-weight: 800; color: #1e293b; margin: 0 0 20px 0;">
+            {% if query %}🔍 Search Results for "{{ query }}"{% else %}🔥 Discover Movies{% endif %}
+        </h2>
+
+        <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px;">
+            {% for movie in movies %}
+                <div class="movie-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                    <a href="{% url 'movie_detail' movie.imdbID %}" style="text-decoration: none; color: inherit;">
+                        <img src="{% if movie.Poster != 'N/A' %}{{ movie.Poster }}{% else %}https://via.placeholder.com/300x450?text=No+Poster{% endif %}" style="width: 100%; height: 280px; object-fit: cover;">
+                        <div style="padding: 15px;">
+                            <h4 style="margin: 0 0 5px 0; font-size: 1em; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ movie.Title }}</h4>
+                            <p style="margin: 0; color: #64748b; font-size: 0.85em;">📅 {{ movie.Year }}</p>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <p style="color: #64748b;">No movies found matching that title query. Try something else!</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .feed-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px -2px rgba(0,0,0,0.08) !important;
+        border-color: #cbd5e1 !important;
+    }
+    .feed-card a:hover {
+        background-color: #e2e8f0 !important;
+    }
+    .feed-card button:hover {
+        background-color: #0056b3 !important;
+    }
+</style>
+{% endblock %}

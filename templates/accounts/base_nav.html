@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Meet</title>
+    <style>
+        /* Minimalist Modern Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Clean Horizontal Navbar Layout */
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.25em;
+            font-weight: 700;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .navbar-links a {
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.95em;
+            transition: color 0.15s ease-in-out;
+        }
+
+        .navbar-links a:hover {
+            color: #007bff;
+        }
+
+        /* Highlighted Call-To-Action Link Style */
+        .navbar-links a.highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .navbar-links a.highlight:hover {
+            color: #bd2130;
+        }
+
+        /* Right Aligned Items Unit Group */
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Clickable Username Profile Handle Badge Styling */
+        .user-link-badge {
+            font-size: 0.9em;
+            color: #475569;
+            text-decoration: none;
+            font-weight: 600;
+            background-color: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.15s ease;
+        }
+
+        .user-link-badge:hover {
+            background-color: #e2e8f0;
+            color: #007bff;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-family: inherit;
+            padding: 0;
+            transition: color 0.15s ease-in-out;
+        }
+
+        .logout-btn:hover {
+            color: #bd2130;
+        }
+
+        /* Core Application Container Area Below Navbar */
+        .app-content {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Responsive Mobile Layout Handling */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+                text-align: center;
+            }
+
+            .navbar-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .navbar-actions {
+                width: 100%;
+                justify-content: center;
+                border-top: 1px solid #dee2e6;
+                padding-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+{% if not hide_navbar %}
+<nav class="navbar">
+    
+    <a href="{% url 'home' %}" class="navbar-brand">🎬 Movie Meet</a>
+
+    <ul class="navbar-links">
+        {% if request.user.is_authenticated %}
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'watchlist' %}">Watchlist</a></li>
+            <li><a href="{% url 'liked_movies' %}">Liked Movies</a></li>
+            <li><a href="{% url 'discover_matches' %}" class="highlight">Find Matches</a></li>
+            <li><a href="{% url 'matches_dashboard' %}">My Matches</a></li>
+            <li><a href="{% url 'user_profile' %}">👤 My Profile</a></li>
+        {% else %}
+            <li><a href="{% url 'login' %}">Log In</a></li>
+            <li><a href="{% url 'register' %}">Create Account</a></li>
+        {% endif %}
+    </ul>
+
+    {% if request.user.is_authenticated %}
+    <div class="navbar-actions">
+        <a href="{% url 'user_profile' %}" class="user-link-badge" title="View Profile Options">
+            @{{ request.user.username }}
+        </a>
+        <form action="{% url 'logout' %}" method="POST" style="display: inline; margin: 0; padding: 0;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+    {% endif %}
+
+</nav>
+{% endif %}
+
+<main class="app-content">
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>
