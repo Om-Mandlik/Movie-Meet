@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-8)nr0i(5)0z1wp)07t&-(ggf9+rjnz5be3))&9i!iw7hxct)fj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['movie-meet-moiz.onrender.com']
 
 load_dotenv()
 OMDB_API_KEY = os.getenv("OMDB_API_KEY")
