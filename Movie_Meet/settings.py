@@ -29,6 +29,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['movie-meet-moiz.onrender.com']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://movie-meet-moiz.onrender.com',
+]
+
 load_dotenv()
 OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 
