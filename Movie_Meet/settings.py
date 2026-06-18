@@ -90,13 +90,29 @@ ASGI_APPLICATION = 'Movie_Meet.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# 1. Parse the base URL environment variable from Render
+db_config = dj_database_url.config(
+    default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+    conn_max_age=600
+)
+
+# 2. If it's a MySQL connection, normalize the driver parameter keys
+if db_config.get('ENGINE') == 'django.db.backends.mysql':
+    # Extract any extra parameters mapped by dj-database-url
+    options = db_config.get('OPTIONS', {})
+    
+    # If 'ssl-mode' exists, convert it to the underscore format expected by mysqlclient
+    if 'ssl-mode' in options:
+        options['ssl_mode'] = options.pop('ssl-mode')
+    
+    # Force strict modes to guarantee modern Django feature compatibility
+    options['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES'"
+    
+    db_config['OPTIONS'] = options
+
+# 3. Feed the cleaned configuration cleanly into Django
 DATABASES = {
-    'default': dj_database_url.config(
-        
-        # If running locally, it gracefully falls back to your local SQLite file
-        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
-        conn_max_age=600
-    )
+    'default': db_config
 }
 
 CHANNEL_LAYERS = {
