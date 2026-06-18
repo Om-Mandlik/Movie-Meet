@@ -92,7 +92,7 @@ ASGI_APPLICATION = 'Movie_Meet.asgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        # If running on Render, it will use the live PostgreSQL DATABASE_URL variable
+        
         # If running locally, it gracefully falls back to your local SQLite file
         default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
         conn_max_age=600
