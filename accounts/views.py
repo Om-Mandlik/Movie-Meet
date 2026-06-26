@@ -1,5 +1,5 @@
-import numpy as np
 import json
+import numpy as np
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import JsonResponse
@@ -16,6 +16,29 @@ from .models import Watchlist, LikedMovie, Profile, MatchAction, DateMatch, Chat
 
 # Services 
 from .services import search_movies, get_movie, update_profile_taste_vector
+
+# ==========================================
+# HELPER DATA CLEANER FOR AIVEN MYSQL STRING STORAGE
+# ==========================================
+def parse_mysql_vector(vector_field_data):
+    """
+    Safely converts strings or JSON blocks from managed cloud MySQL 
+    instances back into clean mathematical float arrays.
+    """
+    if vector_field_data is None:
+        return None
+    if isinstance(vector_field_data, str):
+        try:
+            return json.loads(vector_field_data)
+        except (json.JSONDecodeError, TypeError):
+            try:
+                # Manual parsing engine if commas are escaped natively
+                return [float(x) for x in vector_field_data.strip('[]').split(',') if x.strip()]
+            except ValueError:
+                return None
+    if isinstance(vector_field_data, list):
+        return vector_field_data
+    return None
 
 # ==========================================
 # AUTHENTICATION & REGISTRATION VIEWS
@@ -92,13 +115,10 @@ def register_view(request):
 @login_required
 def profile_view(request):
     user = request.user
-    # Explicitly fetch or instantiate the separate profile model relationship
     user_profile, created = Profile.objects.get_or_create(user=user)
     
     if request.method == 'POST':
         new_bio = request.POST.get('bio', '').strip()
-        
-        # CORRECTED: Save changes to profile.bio instead of core user model properties
         user_profile.bio = new_bio 
         user_profile.save()
         
@@ -111,7 +131,6 @@ def profile_view(request):
 # CORE MOVIES ACTIONS & ARCHIVE VIEWS
 # ==========================================
 
-# accounts/views.py
 @login_required
 def home(request):
     query = request.GET.get("q")
@@ -129,7 +148,9 @@ def home(request):
     # 2. PERSONALIZED RECOMMENDATION FEED GENERATION
     user = request.user
     user_profile, created = Profile.objects.get_or_create(user=user)
-    user_vector = user_profile.taste_vector
+    
+    # MYSQL FIX: Route raw data through parsing engine
+    user_vector = parse_mysql_vector(user_profile.taste_vector)
 
     cold_start = False
     cold_start_message = ""
@@ -139,31 +160,36 @@ def home(request):
         cold_start = True
         cold_start_message = "Like at least 3 movies so our AI engine can map your taste profile!"
     else:
-        # Gather user's interacted histories to exclude them from recommendations
+        user_vector_np = np.array(user_vector, dtype=np.float32)
+        
         my_liked_ids = LikedMovie.objects.filter(user=user).values_list('imdb_id', flat=True)
         my_watchlist_ids = Watchlist.objects.filter(user=user).values_list('imdb_id', flat=True)
         excluded_ids = set(my_liked_ids) | set(my_watchlist_ids)
 
-        # Pull match candidate profiles matching orientation rules
+        # Pull matching orientation candidates
         peer_profiles = Profile.objects.filter(
             gender=user_profile.interested_in,
-            interested_in=user_profile.gender,
-            _taste_vector__isnull=False
-        ).exclude(user=user)[:30]
+            interested_in=user_profile.gender
+        ).exclude(user=user)[:50] # Pulled a higher batch size to filter in-memory safely
 
         peer_vectors = []
         valid_peers = []
+        
         for p in peer_profiles:
-            v = p.taste_vector
-            if v and not any(np.isnan(v)):
-                peer_vectors.append(v)
-                valid_peers.append(p)
+            parsed_v = parse_mysql_vector(p.taste_vector)
+            if parsed_v:
+                try:
+                    v_np = np.array(parsed_v, dtype=np.float32)
+                    if not np.isnan(v_np).any() and v_np.shape == user_vector_np.shape:
+                        peer_vectors.append(v_np)
+                        valid_peers.append(p)
+                except Exception:
+                    continue
 
-        # Track unique IDs manually to make it database-agnostic (Works perfectly on SQLite)
         seen_imdb_ids = set()
 
-        if valid_peers:
-            user_matrix = np.array([user_vector])
+        if valid_peers and len(peer_vectors) > 0:
+            user_matrix = user_vector_np.reshape(1, -1)
             peer_matrix = np.array(peer_vectors)
             scores = cosine_similarity(user_matrix, peer_matrix)[0]
             
@@ -171,7 +197,6 @@ def home(request):
             top_peer_indices = np.argsort(scores)[::-1][:5]
             top_peer_users = [valid_peers[idx].user for idx in top_peer_indices if scores[idx] > 0.4]
 
-            # FIX: Removed .distinct('imdb_id') and handle filtration in Python memory stream
             peer_favorites = LikedMovie.objects.filter(
                 user__in=top_peer_users
             ).exclude(imdb_id__in=excluded_ids).order_by('-liked_at')[:20]
@@ -188,7 +213,6 @@ def home(request):
 
         # Fallback system if peer history tracking runs low
         if len(recommended_movies) < 4:
-            # FIX: Removed .distinct('imdb_id') here as well
             global_trending = LikedMovie.objects.exclude(
                 imdb_id__in=excluded_ids
             ).order_by('-liked_at')[:20]
@@ -213,7 +237,7 @@ def home(request):
             "liked_count": liked_count,
             "cold_start": cold_start,
             "cold_start_message": cold_start_message,
-            "recommended_movies": recommended_movies[:8] # Final slice stays compact
+            "recommended_movies": recommended_movies[:8]
         }
     )
 
@@ -289,7 +313,9 @@ def liked_movies(request):
 def discover_taste_matches(request):
     user = request.user
     user_profile, created = Profile.objects.get_or_create(user=user)
-    user_vector = user_profile.taste_vector
+    
+    # MYSQL FIX: Parse vector field through custom parsing middleware sanitiser
+    user_vector = parse_mysql_vector(user_profile.taste_vector)
 
     if user_vector is None:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
@@ -301,14 +327,14 @@ def discover_taste_matches(request):
             "error": "Please like a few movies first to calculate your match suggestions!"
         })
 
+    user_vector_np = np.array(user_vector, dtype=np.float32)
     already_interacted_ids = MatchAction.objects.filter(user_from=user).values_list('user_to_id', flat=True)
 
     candidate_profiles = (
         Profile.objects
         .filter(
             gender=user_profile.interested_in,
-            interested_in=user_profile.gender,
-            _taste_vector__isnull=False  
+            interested_in=user_profile.gender
         )
         .exclude(user=user)
         .exclude(user_id__in=already_interacted_ids)
@@ -319,17 +345,26 @@ def discover_taste_matches(request):
     candidate_vectors = []
 
     for p in candidate_profiles:
-        vector = p.taste_vector
-        if vector and isinstance(vector, list) and not any(np.isnan(vector)):
-            valid_candidates.append(p)
-            candidate_vectors.append(vector)
+        parsed_vector = parse_mysql_vector(p.taste_vector)
+        if not parsed_vector:
+            continue
 
-    if not valid_candidates:
+        try:
+            vector_np = np.array(parsed_vector, dtype=np.float32)
+            # Ensure dimensions line up perfectly before feeding matrix engines
+            if not np.isnan(vector_np).any() and vector_np.shape == user_vector_np.shape:
+                valid_candidates.append(p)
+                candidate_vectors.append(vector_np)
+        except Exception:
+            continue  
+
+    # Catch empty candidates condition gracefully
+    if not valid_candidates or len(candidate_vectors) == 0:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
             return JsonResponse({"results": []})
         return render(request, "accounts/discover.html", {"candidates": []})
 
-    user_matrix = np.array([user_vector])
+    user_matrix = user_vector_np.reshape(1, -1)
     candidate_matrix = np.array(candidate_vectors)
     scores = cosine_similarity(user_matrix, candidate_matrix)[0]
 
@@ -392,15 +427,11 @@ def swipe_user(request, target_user_id, action_type):
     return JsonResponse({"success": True, "mutual_match": is_match})
 
 # ==========================================
-# UPDATED MUTUAL MATCH DASHBOARD VIEW
+# MUTUAL MATCH DASHBOARD VIEW
 # ==========================================
 
 @login_required
 def matches_dashboard(request):
-    """
-    Renders the dashboard with an updated dynamic database calculation rule.
-    Injects unread count trackers per specific room card.
-    """
     user = request.user
     matches = DateMatch.objects.filter(
         Q(user_one=user) | Q(user_two=user)
@@ -412,7 +443,6 @@ def matches_dashboard(request):
         other_profile = getattr(other_user, 'profile', None)
         bio = other_profile.bio if other_profile else "No bio provided."
         
-        # ADDED: Dynamic calculation query counting message lines targeting this card context
         unread_count = ChatMessage.objects.filter(
             match=m,
             is_read=False
@@ -424,26 +454,22 @@ def matches_dashboard(request):
             "username": other_user.username,
             "bio": bio,
             "common_movies": m.common_movies_count,
-            "unread_count": unread_count,  # Passed context variable directly to your template
+            "unread_count": unread_count, 
         })
         
     return render(request, "accounts/matches_dashboard.html", {"matches": mutual_matches})
 
 # ==========================================
-# POLISHED CHAT ROOM CONTROLLERS
+# CHAT ROOM CONTROLLERS
 # ==========================================
 
 @login_required
 def chat_room(request, match_id):
-    """
-    Renders the conversation viewport window and marks incoming traffic read.
-    """
     match_instance = get_object_or_404(DateMatch, id=match_id)
     
     if request.user != match_instance.user_one and request.user != match_instance.user_two:
         return render(request, 'accounts/suspended.html', {'error': 'Access Denied'})
 
-    # REPOSITIONED: Read execution marks run securely upon initial load rendering request
     ChatMessage.objects.filter(
         match=match_instance,
         is_read=False
