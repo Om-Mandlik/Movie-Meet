@@ -81,9 +81,9 @@ def register_view(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
         bio = request.POST.get("bio", "").strip()
-        gender = request.POST.get("gender")
+        gender_input = request.POST.get("gender")
 
-        if not username or not password or not gender:
+        if not username or not password or not gender_input:
             return render(request, "accounts/register.html", {
                 'error': "Username, Password, and Gender are required fields.",
                 'hide_navbar': True
@@ -95,10 +95,22 @@ def register_view(request):
                 'hide_navbar': True
             })
 
+        # NORMALIZE INPUT TO SHORT CHOICE KEYS ('M', 'F', 'O')
+        if gender_input in ["Male", "M", "male"]:
+            db_gender = "M"
+            db_interest = "F"
+        elif gender_input in ["Female", "F", "female"]:
+            db_gender = "F"
+            db_interest = "M"
+        else:
+            db_gender = "O"
+            db_interest = "O"
+
         user = User.objects.create_user(username=username, email=email, password=password)
         user_profile, created = Profile.objects.get_or_create(user=user)
         user_profile.bio = bio
-        user_profile.gender = gender
+        user_profile.gender = db_gender
+        user_profile.interested_in = db_interest  # Auto-populate to guarantee matching setup
         user_profile.save()
 
         login(request, user)
@@ -166,11 +178,21 @@ def home(request):
         my_watchlist_ids = Watchlist.objects.filter(user=user).values_list('imdb_id', flat=True)
         excluded_ids = set(my_liked_ids) | set(my_watchlist_ids)
 
-        # Pull matching orientation candidates
+        # NORMALIZE USER STRINGS FOR SEARCH COMPARISON
+        my_gender = user_profile.gender
+        my_interest = user_profile.interested_in
+
+        if my_gender in ["Male", "male", "M"]: my_gender = "M"
+        elif my_gender in ["Female", "female", "F"]: my_gender = "F"
+
+        if my_interest in ["Male", "male", "M"]: my_interest = "M"
+        elif my_interest in ["Female", "female", "F"]: my_interest = "F"
+
+        # Pull matching orientation candidates safely using fallback patterns
         peer_profiles = Profile.objects.filter(
-            gender=user_profile.interested_in,
-            interested_in=user_profile.gender
-        ).exclude(user=user)[:50] # Pulled a higher batch size to filter in-memory safely
+            Q(gender=my_interest) | Q(gender__isnull=True) | Q(gender=""),
+            Q(interested_in=my_gender) | Q(interested_in__isnull=True) | Q(interested_in="")
+        ).exclude(user=user)[:50]
 
         peer_vectors = []
         valid_peers = []
@@ -314,7 +336,7 @@ def discover_taste_matches(request):
     user = request.user
     user_profile, created = Profile.objects.get_or_create(user=user)
     
-    # MYSQL FIX: Parse vector field through custom parsing middleware sanitiser
+    # MYSQL FIX: Parse vector field through custom parsing engine
     user_vector = parse_mysql_vector(user_profile.taste_vector)
 
     if user_vector is None:
@@ -330,11 +352,22 @@ def discover_taste_matches(request):
     user_vector_np = np.array(user_vector, dtype=np.float32)
     already_interacted_ids = MatchAction.objects.filter(user_from=user).values_list('user_to_id', flat=True)
 
+    # NORMALIZE USER ORIENTATION VALUES
+    my_gender = user_profile.gender
+    my_interest = user_profile.interested_in
+
+    if my_gender in ["Male", "male", "M"]: my_gender = "M"
+    elif my_gender in ["Female", "female", "F"]: my_gender = "F"
+
+    if my_interest in ["Male", "male", "M"]: my_interest = "M"
+    elif my_interest in ["Female", "female", "F"]: my_interest = "F"
+
+    # Robust reciprocal filter configuration via explicit database conditional gates
     candidate_profiles = (
         Profile.objects
         .filter(
-            gender=user_profile.interested_in,
-            interested_in=user_profile.gender
+            Q(gender=my_interest) | Q(gender__isnull=True) | Q(gender=""),
+            Q(interested_in=my_gender) | Q(interested_in__isnull=True) | Q(interested_in="")
         )
         .exclude(user=user)
         .exclude(user_id__in=already_interacted_ids)
@@ -351,7 +384,6 @@ def discover_taste_matches(request):
 
         try:
             vector_np = np.array(parsed_vector, dtype=np.float32)
-            # Ensure dimensions line up perfectly before feeding matrix engines
             if not np.isnan(vector_np).any() and vector_np.shape == user_vector_np.shape:
                 valid_candidates.append(p)
                 candidate_vectors.append(vector_np)
