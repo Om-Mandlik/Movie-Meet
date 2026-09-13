@@ -1,97 +1,34 @@
 {% extends 'accounts/base_nav.html' %}
-
+{% block title %}Movie Meet · Discover People{% endblock %}
 {% block content %}
-<div class="matches-page-wrapper" style="max-width: 650px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
-    
-    <h2 style="font-size: 2em; font-weight: 800; color: #1e293b; text-align: center; margin-bottom: 30px; letter-spacing: -0.5px;">
-        ✨ Your Movie Taste Matches
-    </h2>
-    
-    {% if error %}
-        <div class="engine-alert" style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-            <h4 style="margin: 0 0 10px 0; font-size: 1.4em; color: #b45309;">🍿 Engine Needs More Popcorn!</h4>
-            <p style="color: #d97706; margin-bottom: 24px; font-size: 0.95em; line-height: 1.5;">{{ error }}</p>
-            <hr style="border: 0; border-top: 1px solid #fef3c7; margin-bottom: 24px;">
-            <a href="{% url 'home' %}" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 12px 24px; font-weight: 600; border-radius: 8px; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
-                Go Search & Like Movies
-            </a>
-        </div>
-    {% else %}
-        
-        {% if not candidates %}
-            <div class="empty-matches-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                <h3 style="color: #1e293b; font-size: 1.3em; margin-bottom: 10px;">No matches found right now!</h3>
-                <p style="color: #64748b; font-size: 0.95em; line-height: 1.5; margin: 0;">We couldn't find profiles matching your exact taste criteria. Try liking a wider variety of movie genres!</p>
-            </div>
-        {% endif %}
-
-        <div class="discovery-feed" style="display: flex; flex-direction: column; gap: 25px;">
-            {% for candidate in candidates %}
-                <div class="candidate-card" id="user-card-{{ candidate.user_id }}" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden;">
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
-                        <div>
-                            <h3 style="font-size: 1.3em; font-weight: 700; color: #1e293b; margin: 0 0 8px 0;">@{{ candidate.username }}</h3>
-                            <p style="font-size: 0.95em; color: #475569; font-style: italic; line-height: 1.5; margin: 0; padding-left: 4px; border-left: 2px solid #cbd5e1;">
-                                "{{ candidate.bio|default:'No bio provided.' }}"
-                            </p>
-                        </div>
-                        
-                        <div style="flex-shrink: 0;">
-                            <span style="display: inline-block; background-color: #10b981; color: #ffffff; font-weight: 700; font-size: 0.9em; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
-                                🔥 {{ candidate.match_score }} Match
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
-                    
-                    <div style="display: flex; gap: 15px; justify-content: center;">
-                        <button onclick="handleSwipe({{ candidate.user_id }}, 'DISLIKE')" class="swipe-btn dislike" style="flex: 1; max-width: 180px; background-color: transparent; border: 1px solid #ef4444; color: #ef4444; font-size: 0.95em; font-weight: 600; padding: 12px 0; border-radius: 30px; cursor: pointer; transition: all 0.15s ease;" onmouseover="this.style.backgroundColor='#fef2f2';" onmouseout="this.style.backgroundColor='transparent';">
-                            ❌ Pass
-                        </button>
-                        <button onclick="handleSwipe({{ candidate.user_id }}, 'LIKE')" class="swipe-btn like" style="flex: 1; max-width: 180px; background-color: #ef4444; border: none; color: #ffffff; font-size: 0.95em; font-weight: 600; padding: 12px 0; border-radius: 30px; cursor: pointer; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
-                            ❤️ Like
-                        </button>
-                    </div>
-
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-</div>
-
+<div class="discover-head page-head"><span class="eyebrow">✨ Chemistry engine</span><h1>Find your movie people.</h1><p>Like the profiles that feel familiar. When the feeling is mutual, you’ve got a match.</p></div>
+{% if error %}<div class="card alert-card"><div class="alert-icon">🍿</div><h3>More popcorn needed</h3><p>{{ error }}</p><a class="btn btn-primary" href="{% url 'home' %}">Like some movies</a></div>{% else %}
+<div class="discover-stage">
+{% if not candidates %}<div class="card empty-state"><div class="empty-icon">🌙</div><h3>No new profiles right now</h3><p>Try liking a wider range of movies. Your taste profile helps us find better chemistry.</p><a class="btn btn-primary" href="{% url 'home' %}">Discover movies</a></div>{% endif %}
+{% for candidate in candidates %}
+<article class="candidate-card card" id="user-card-{{ candidate.user_id }}">
+    <div class="profile-glow"></div><div class="candidate-avatar">◉</div>
+    <div class="candidate-main"><div class="candidate-top"><div><span class="eyebrow">Potential match</span><h2>@{{ candidate.username }}</h2></div><span class="match-score">🔥 {{ candidate.match_score }}%</span></div>
+    <p class="bio">“{{ candidate.bio|default:'A movie lover with no bio yet.' }}”</p>
+    <div class="taste-line"><span>🎬</span><span>Shared movie taste detected</span></div>
+    <div class="swipe-actions"><button onclick="handleSwipe({{ candidate.user_id }}, 'DISLIKE')" class="btn btn-secondary pass">✕ Pass</button><button onclick="handleSwipe({{ candidate.user_id }}, 'LIKE')" class="btn btn-primary like">♥ Like</button></div></div>
+</article>
+{% endfor %}
+</div>{% endif %}
+<div id="match-toast" class="match-toast" hidden><div>🎉</div><strong>It’s a match!</strong><span>You both liked each other. Go say hi.</span><a class="btn btn-primary" href="{% url 'matches_dashboard' %}">Open matches</a></div>
 <script>
-function handleSwipe(targetUserId, actionType) {
-    const url = `/swipe/${targetUserId}/${actionType}/`;
-    
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const card = document.getElementById(`user-card-${targetUserId}`);
-            card.style.transition = "all 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
-            card.style.transform = "translateX(" + (actionType === 'LIKE' ? '250px' : '-250px') + ") rotate(" + (actionType === 'LIKE' ? '10' : '-10') + "deg)";
-            card.style.opacity = "0";
-            
-            setTimeout(() => {
-                card.remove();
-                if (document.querySelectorAll('.candidate-card').length === 0) {
-                    window.location.reload();
-                }
-            }, 400);
-
-            if (data.mutual_match) {
-                alert("🎉 It's a Mutual Match! Go check your Match Chat logs!");
-            }
-        }
-    })
-    .catch(error => console.error('Error processing swipe:', error));
+function handleSwipe(id,action){
+ const card=document.getElementById(`user-card-${id}`); if(!card)return;
+ fetch(`/swipe/${id}/${action}/`,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+ .then(r=>r.json()).then(data=>{if(!data.success)return;
+ card.classList.add(action==='LIKE'?'swipe-like':'swipe-pass');
+ setTimeout(()=>{card.remove();if(!document.querySelector('.candidate-card'))location.reload()},420);
+ if(data.mutual_match){const t=document.getElementById('match-toast');t.hidden=false}
+ }).catch(console.error);
 }
 </script>
+<style>
+.discover-head{max-width:760px}.discover-stage{max-width:720px;margin:0 auto;display:grid;gap:18px}.candidate-card{position:relative;overflow:hidden;display:flex;padding:28px;min-height:330px;transition:transform .4s ease,opacity .4s ease}.candidate-card:hover{border-color:rgba(255,77,109,.25)}.profile-glow{position:absolute;width:240px;height:240px;background:radial-gradient(circle,rgba(255,77,109,.18),transparent 68%);right:-80px;top:-80px}.candidate-avatar{width:76px;height:76px;min-width:76px;border-radius:24px;display:grid;place-items:center;font-size:2rem;background:linear-gradient(145deg,#292e3d,#12151d);border:1px solid var(--border2);margin-right:20px}.candidate-main{flex:1}.candidate-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.candidate-top h2{margin:0;font-size:1.65rem}.match-score{white-space:nowrap;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:#6ee7b7;padding:9px 12px;border-radius:999px;font-weight:900}.bio{color:#c5cad4;line-height:1.7;margin:28px 0}.taste-line{display:inline-flex;gap:8px;align-items:center;color:var(--muted);background:rgba(255,255,255,.04);padding:9px 12px;border-radius:12px;font-size:.82rem}.swipe-actions{display:flex;gap:10px;margin-top:28px}.swipe-actions .btn{flex:1}.swipe-like{transform:translateX(120%) rotate(8deg);opacity:0}.swipe-pass{transform:translateX(-120%) rotate(-8deg);opacity:0}.alert-card{padding:35px;text-align:center;max-width:620px;margin:auto}.alert-icon{font-size:3rem}.alert-card p{color:var(--muted);line-height:1.6}.match-toast{position:fixed;inset:auto 20px 20px auto;z-index:3000;width:min(360px,calc(100% - 40px));padding:24px;background:linear-gradient(145deg,#241722,#17151e);border:1px solid rgba(255,77,109,.3);border-radius:20px;box-shadow:var(--shadow)}.match-toast div{font-size:2.2rem}.match-toast strong,.match-toast span{display:block}.match-toast span{color:var(--muted);margin:7px 0 17px;font-size:.9rem}
+@media(max-width:600px){.candidate-card{padding:22px;flex-direction:column}.candidate-avatar{margin:0 0 18px}.candidate-top{flex-direction:column}}
+</style>
 {% endblock %}

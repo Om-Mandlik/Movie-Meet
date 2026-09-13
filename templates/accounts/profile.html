@@ -1,65 +1,13 @@
 {% extends 'accounts/base_nav.html' %}
-
+{% block title %}Movie Meet · Profile{% endblock %}
 {% block content %}
-<div class="profile-page-wrapper" style="max-width: 550px; margin: 50px auto; padding: 0 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
-    
-    <div class="profile-card" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
-        
-        <div style="text-align: center; margin-bottom: 30px;">
-            <div style="width: 80px; height: 80px; background-color: #f1f5f9; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; font-size: 2em;">
-                👤
-            </div>
-            <h2 style="margin: 0 0 4px 0; color: #1e293b; font-size: 1.6em; font-weight: 800; letter-spacing: -0.5px;">
-                @{{ user.username }}
-            </h2>
-            <p style="color: #64748b; font-size: 0.95em; margin: 0;">
-                {{ user.email|default:"No email provided" }}
-            </p>
-        </div>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div style="background-color: #d1fae5; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 25px; font-size: 0.9em; font-weight: 600; border: 1px solid #a7f3d0; display: flex; align-items: center; gap: 8px;">
-                    <span>✨</span> {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="POST" action="{% url 'user_profile' %}" style="display: flex; flex-direction: column; gap: 20px;">
-            {% csrf_token %}
-            
-            <div style="display: flex; gap: 15px;">
-                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <label for="gender" style="font-weight: 600; font-size: 0.85em; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Gender</label>
-                    <select id="gender" name="gender" style="padding: 12px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #1e293b; font-size: 0.95em; font-weight: 600; width: 100%; cursor: pointer;">
-                        <option value="NS" {% if profile.gender == 'NS' %}selected{% endif %}>Not Specified</option>
-                        <option value="M" {% if profile.gender == 'M' %}selected{% endif %}>Male</option>
-                        <option value="F" {% if profile.gender == 'F' %}selected{% endif %}>Female</option>
-                    </select>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-                    <label for="interested_in" style="font-weight: 600; font-size: 0.85em; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Seeking</label>
-                    <select id="interested_in" name="interested_in" style="padding: 12px 14px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; color: #1e293b; font-size: 0.95em; font-weight: 600; width: 100%; cursor: pointer;">
-                        <option value="E" {% if profile.interested_in == 'E' %}selected{% endif %}>Everyone</option>
-                        <option value="M" {% if profile.interested_in == 'M' %}selected{% endif %}>Male</option>
-                        <option value="F" {% if profile.interested_in == 'F' %}selected{% endif %}>Female</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-                <label for="bio" style="font-weight: 600; font-size: 0.85em; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
-                    About Me / Bio
-                </label>
-                <textarea id="bio" name="bio" rows="4" placeholder="Update your movie tastes, favorite directors, or what makes a perfect cinema date..." style="padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; color: #1e293b; background-color: #ffffff; resize: vertical; font-family: inherit; line-height: 1.5; transition: border-color 0.15s ease;" onfocus="this.style.borderColor='#007bff'; this.style.outline='none';" onblur="this.style.borderColor='#cbd5e1';">{{ profile.bio|default_if_none:"" }}</textarea>
-            </div>
-
-            <button type="submit" style="background-color: #007bff; color: #ffffff; border: none; padding: 14px; border-radius: 8px; font-size: 1em; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease; box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.15);" onmouseover="this.style.backgroundColor='#0056b3';" onmouseout="this.style.backgroundColor='#007bff';">
-                Save Changes
-            </button>
-        </form>
-
-    </div>
+<div class="profile-layout">
+<section class="profile-card card"><div class="profile-cover"></div><div class="profile-main"><div class="profile-avatar">◉</div><span class="eyebrow">Your movie identity</span><h1>@{{ user.username }}</h1><p class="email">{{ user.email|default:"No email provided" }}</p>
+{% if messages %}{% for message in messages %}<div class="success">✨ {{ message }}</div>{% endfor %}{% endif %}
+<div class="profile-intro"><span>🎬</span><p>Fine-tune who you are and who you want to meet. Your profile powers your compatibility results.</p></div></div></section>
+<section class="card form-card"><div class="form-head"><span class="eyebrow">Settings</span><h2>Make your profile yours.</h2></div><form method="POST" action="{% url 'user_profile' %}">{% csrf_token %}<div class="two-col"><div class="field"><label for="gender">Gender</label><select class="select" id="gender" name="gender"><option value="NS" {% if profile.gender == 'NS' %}selected{% endif %}>Not specified</option><option value="M" {% if profile.gender == 'M' %}selected{% endif %}>Male</option><option value="F" {% if profile.gender == 'F' %}selected{% endif %}>Female</option></select></div><div class="field"><label for="interested_in">Seeking</label><select class="select" id="interested_in" name="interested_in"><option value="E" {% if profile.interested_in == 'E' %}selected{% endif %}>Everyone</option><option value="M" {% if profile.interested_in == 'M' %}selected{% endif %}>Male</option><option value="F" {% if profile.interested_in == 'F' %}selected{% endif %}>Female</option></select></div></div><div class="field"><label for="bio">About me / bio</label><textarea class="textarea" id="bio" name="bio" rows="6" placeholder="Favorite directors, genres, comfort movies, perfect cinema date…">{{ profile.bio|default_if_none:"" }}</textarea></div><button class="btn btn-primary save-btn" type="submit">Save profile</button></form></section>
 </div>
+<style>
+.profile-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px;align-items:start}.profile-card{overflow:hidden}.profile-cover{height:130px;background:radial-gradient(circle at 20% 20%,rgba(255,77,109,.35),transparent 35%),radial-gradient(circle at 80% 10%,rgba(167,139,250,.3),transparent 40%),linear-gradient(135deg,#1d2330,#10131a)}.profile-main{padding:0 28px 30px}.profile-avatar{width:92px;height:92px;margin-top:-45px;margin-bottom:18px;border-radius:28px;display:grid;place-items:center;font-size:2.3rem;background:#191d27;border:5px solid #12151d}.profile-main h1{font-size:1.8rem;margin:0}.email{color:var(--muted);font-size:.82rem}.profile-intro{display:flex;gap:10px;margin-top:25px;padding:14px;background:rgba(255,255,255,.04);border-radius:14px}.profile-intro p{margin:0;color:#c3c8d2;font-size:.82rem;line-height:1.5}.success{margin-top:18px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.22);color:#6ee7b7;padding:11px 13px;border-radius:12px;font-size:.82rem;font-weight:750}.form-card{padding:30px}.form-head h2{margin:0 0 25px;font-size:1.5rem}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:17px}.field{margin-bottom:17px}.save-btn{width:100%;margin-top:4px}@media(max-width:800px){.profile-layout{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}}
+</style>
 {% endblock %}

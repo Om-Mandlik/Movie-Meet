@@ -3,186 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Meet</title>
+    <title>{% block title %}Movie Meet{% endblock %}</title>
+    <meta name="theme-color" content="#08090d">
     <style>
-        /* Minimalist Modern Global Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        :root{
+            --bg:#08090d;--bg2:#0e1017;--surface:#12151d;--surface2:#191d27;
+            --text:#f8fafc;--muted:#9aa2b3;--primary:#ff4d6d;--primary2:#ff758f;
+            --violet:#a78bfa;--green:#34d399;--gold:#fbbf24;
+            --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.13);
+            --shadow:0 24px 70px rgba(0,0,0,.34);--radius:22px;--radius-sm:14px;
+            --ease:180ms cubic-bezier(.2,.8,.2,1);
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #212529;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        *{box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;min-height:100vh;color:var(--text);
+            font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            background:
+              radial-gradient(circle at 10% 0%,rgba(255,77,109,.11),transparent 30rem),
+              radial-gradient(circle at 90% 10%,rgba(167,139,250,.10),transparent 28rem),
+              var(--bg);
         }
-
-        /* Clean Horizontal Navbar Layout */
-        .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #dee2e6;
-            padding: 15px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+        body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:45px 45px}
+        a{color:inherit}button,input,select,textarea{font:inherit}
+        button{cursor:pointer}
+        .navbar{
+            position:sticky;top:14px;z-index:1000;max-width:1240px;margin:14px auto 0;padding:10px 12px;
+            display:flex;align-items:center;gap:10px;background:rgba(18,21,29,.82);
+            border:1px solid var(--border2);border-radius:20px;backdrop-filter:blur(20px);
+            box-shadow:0 14px 45px rgba(0,0,0,.22)
         }
-
-        .navbar-brand {
-            font-size: 1.25em;
-            font-weight: 700;
-            text-decoration: none;
-            color: #007bff;
+        .navbar-brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-weight:900;letter-spacing:-.6px;padding:10px 13px;white-space:nowrap}
+        .brand-mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--primary),#ff8aa0);box-shadow:0 8px 24px rgba(255,77,109,.28)}
+        .navbar-links{display:flex;align-items:center;gap:4px;list-style:none;margin:0;padding:0;flex:1}
+        .navbar-links a{display:block;text-decoration:none;color:var(--muted);font-size:.88rem;font-weight:700;padding:10px 12px;border-radius:12px;transition:all var(--ease)}
+        .navbar-links a:hover,.navbar-links a.highlight{color:var(--text);background:rgba(255,255,255,.06)}
+        .navbar-links a.highlight{color:#ffd6de}
+        .navbar-actions{display:flex;align-items:center;gap:8px}
+        .user-link-badge{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--text);font-size:.84rem;font-weight:800;background:var(--surface2);border:1px solid var(--border);padding:9px 12px;border-radius:12px}
+        .logout-btn{border:0;background:transparent;color:#ff9caf;font-weight:800;padding:9px 10px}
+        .app-content{width:min(1180px,calc(100% - 32px));margin:32px auto 70px;position:relative;z-index:1}
+        .page-head{margin-bottom:28px}.page-head h1,.page-head h2{margin:0 0 7px;font-size:clamp(1.8rem,4vw,2.7rem);letter-spacing:-1.3px}.page-head p{margin:0;color:var(--muted);line-height:1.6}
+        .eyebrow{display:inline-flex;align-items:center;gap:7px;color:#ffb6c3;font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px}
+        .card{background:linear-gradient(145deg,rgba(25,29,39,.96),rgba(16,18,25,.96));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:13px;padding:11px 16px;text-decoration:none;font-weight:850;transition:transform var(--ease),box-shadow var(--ease),background var(--ease);color:var(--text)}
+        .btn:hover{transform:translateY(-2px)}.btn-primary{background:linear-gradient(135deg,var(--primary),#ff3157);box-shadow:0 12px 28px rgba(255,77,109,.22)}.btn-secondary{background:rgba(255,255,255,.055);border-color:var(--border2)}.btn-danger{background:rgba(255,77,109,.08);border-color:rgba(255,77,109,.3);color:#ff9caf}
+        .input,.select,.textarea{width:100%;background:#0c0f15;color:var(--text);border:1px solid var(--border2);border-radius:13px;padding:13px 14px;outline:none;transition:border var(--ease),box-shadow var(--ease)}
+        .input:focus,.select:focus,.textarea:focus{border-color:rgba(255,77,109,.7);box-shadow:0 0 0 4px rgba(255,77,109,.10)}
+        .field{display:flex;flex-direction:column;gap:7px}.field label{font-size:.78rem;font-weight:850;color:#c7ccd7;text-transform:uppercase;letter-spacing:.08em}
+        .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2);background:rgba(255,255,255,.055);color:#dce1ea;padding:7px 11px;border-radius:999px;font-size:.78rem;font-weight:800}
+        .empty-state{text-align:center;padding:55px 28px}.empty-icon{font-size:3.2rem;margin-bottom:12px}.empty-state h3{margin:0 0 8px}.empty-state p{max-width:520px;margin:0 auto 22px;color:var(--muted);line-height:1.65}
+        .poster{background:#090b10;overflow:hidden}.poster img{width:100%;height:100%;object-fit:cover;display:block}
+        .toast{position:fixed;right:22px;bottom:22px;z-index:2000;background:#1a202b;border:1px solid var(--border2);padding:14px 18px;border-radius:14px;box-shadow:var(--shadow)}
+        @media(max-width:900px){.navbar{margin:8px 10px 0}.navbar-links a{padding:9px 8px}.user-link-badge{display:none}}
+        @media(max-width:680px){
+            .navbar{top:8px;flex-wrap:wrap;border-radius:18px}.navbar-brand{flex:1}.navbar-links{order:3;flex-basis:100%;overflow-x:auto;justify-content:space-between}.navbar-links a{font-size:.78rem;padding:9px 8px;white-space:nowrap}.logout-btn{font-size:.78rem}
+            .app-content{width:min(100% - 22px,1180px);margin-top:22px}.card{border-radius:18px}
         }
-
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            list-style: none;
-        }
-
-        .navbar-links a {
-            text-decoration: none;
-            color: #495057;
-            font-weight: 500;
-            font-size: 0.95em;
-            transition: color 0.15s ease-in-out;
-        }
-
-        .navbar-links a:hover {
-            color: #007bff;
-        }
-
-        /* Highlighted Call-To-Action Link Style */
-        .navbar-links a.highlight {
-            color: #dc3545;
-            font-weight: 600;
-        }
-        
-        .navbar-links a.highlight:hover {
-            color: #bd2130;
-        }
-
-        /* Right Aligned Items Unit Group */
-        .navbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Clickable Username Profile Handle Badge Styling */
-        .user-link-badge {
-            font-size: 0.9em;
-            color: #475569;
-            text-decoration: none;
-            font-weight: 600;
-            background-color: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 20px;
-            transition: all 0.15s ease;
-        }
-
-        .user-link-badge:hover {
-            background-color: #e2e8f0;
-            color: #007bff;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95em;
-            font-family: inherit;
-            padding: 0;
-            transition: color 0.15s ease-in-out;
-        }
-
-        .logout-btn:hover {
-            color: #bd2130;
-        }
-
-        /* Core Application Container Area Below Navbar */
-        .app-content {
-            flex: 1;
-            max-width: 1200px;
-            width: 100%;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        /* Responsive Mobile Layout Handling */
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 12px;
-                padding: 15px;
-                text-align: center;
-            }
-
-            .navbar-links {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-            }
-
-            .navbar-actions {
-                width: 100%;
-                justify-content: center;
-                border-top: 1px solid #dee2e6;
-                padding-top: 10px;
-            }
-        }
+        @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-
 {% if not hide_navbar %}
 <nav class="navbar">
-    
-    <a href="{% url 'home' %}" class="navbar-brand">🎬 Movie Meet</a>
-
+    <a href="{% url 'home' %}" class="navbar-brand"><span class="brand-mark">🎬</span><span>Movie Meet</span></a>
     <ul class="navbar-links">
         {% if request.user.is_authenticated %}
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'watchlist' %}">Watchlist</a></li>
-            <li><a href="{% url 'liked_movies' %}">Liked Movies</a></li>
-            <li><a href="{% url 'discover_matches' %}" class="highlight">Find Matches</a></li>
-            <li><a href="{% url 'matches_dashboard' %}">My Matches</a></li>
-            <li><a href="{% url 'user_profile' %}">👤 My Profile</a></li>
+            <li><a href="{% url 'liked_movies' %}">❤️ Likes</a></li>
+            <li><a href="{% url 'discover_matches' %}" class="highlight">✨ Discover</a></li>
+            <li><a href="{% url 'matches_dashboard' %}">💬 Matches</a></li>
+            <li><a href="{% url 'user_profile' %}">Profile</a></li>
         {% else %}
-            <li><a href="{% url 'login' %}">Log In</a></li>
-            <li><a href="{% url 'register' %}">Create Account</a></li>
+            <li><a href="{% url 'login' %}">Log in</a></li>
+            <li><a href="{% url 'register' %}" class="highlight">Create account</a></li>
         {% endif %}
     </ul>
-
     {% if request.user.is_authenticated %}
     <div class="navbar-actions">
-        <a href="{% url 'user_profile' %}" class="user-link-badge" title="View Profile Options">
-            @{{ request.user.username }}
-        </a>
-        <form action="{% url 'logout' %}" method="POST" style="display: inline; margin: 0; padding: 0;">
-            {% csrf_token %}
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
+        <a href="{% url 'user_profile' %}" class="user-link-badge">◉ @{{ request.user.username }}</a>
+        <form action="{% url 'logout' %}" method="POST" style="margin:0">{% csrf_token %}<button type="submit" class="logout-btn">Log out</button></form>
     </div>
     {% endif %}
-
 </nav>
 {% endif %}
-
-<main class="app-content">
-    {% block content %}
-    {% endblock %}
-</main>
-
+<main class="app-content">{% block content %}{% endblock %}</main>
 </body>
 </html>
